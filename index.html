@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="icon" type="image/png" href="assets/img/logo.png">
         <link rel="stylesheet" href="assets/css/styles.css">
-        
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <!-- =====BOX ICONS===== -->
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
         <title>Rosa Rocco Portfolio</title>
@@ -74,8 +74,12 @@
                     </div>
                     
                     <div>
-                        <h2 class="about__subtitle">I'am Rocco</h2>
-                        <p class="about__text">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Voluptate cum expedita quo culpa tempora, assumenda, quis fugiat ut voluptates soluta, aut earum nemo recusandae cumque perferendis! Recusandae alias accusamus atque.</p>           
+                        <h2 class="about__subtitle">I'am <span class="home__title-color">Rocco</span></h2>
+                        <p class="about__text">Hi I'm <span class="home__title-color">Rocco</span>
+                            <br>
+                            Hello, I am a 17-year-old programming enthusiast with the ambition to turn this passion into a professional career. Since childhood, I have been attracted to computers and the endless possibilities that programming offers. I love exploring new languages and technologies, and I am always looking for new challenges that will allow me to grow and improve my skills.
+Currently, I am focusing on learning JavaScript and Python, two powerful languages that are critical in the world of web development and data science. I am excited to continue learning and contributing to projects that make a difference, bringing my innovative ideas and solutions to the field of computer science.
+                        </p>           
                         <br>
                         <div class="about__text">
                             <center><button class="btn" id="downloadCvBtn"><i class="fa fa-download"></i> Download cv</button></center>
@@ -91,7 +95,7 @@
                 <div class="skills__container bd-grid">          
                     <div>
                         <h2 class="skills__subtitle">Profesional Skills</h2>
-                        <p class="skills__text">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Velit optio id vero amet, alias architecto consectetur error eum eaque sit.</p>
+                        <p class="skills__text">As a passionate young programmer, I have developed a strong foundation in several key technologies essential for both web development and software engineering. Below is a summary of my proficiency in each:</p>
                         <div class="skills__data">
                             <div class="skills__names">
                                 <i class='bx bxl-html5 skills__icon'></i>
@@ -165,8 +169,8 @@
                 <h2 class="section-title">Work</h2>
 
                 <div class="work__container bd-grid">
-                    <a href="" class="work__img">
-                        <img src="assets/img/work1.jpg" alt="">
+                    <a href="https://drive.google.com/file/d/1VY7FFdZznIuCc5ub9tcZ3Q-GWW64GlUO/view" class="work__img">
+                        <img src="assets/img/work1.jpg" alt="Italian Rush">
                     </a>
                     <a href="" class="work__img">
                         <img src="assets/img/work2.jpg" alt="">
@@ -191,13 +195,14 @@
                 <h2 class="section-title">Contact</h2>
 
                 <div class="contact__container bd-grid">
-                    <form action="" class="contact__form">
-                        <input type="text" placeholder="Name" class="contact__input">
-                        <input type="mail" placeholder="Email" class="contact__input">
-                        <textarea name="" placeholder="Insert text here:" id="text_input" cols="0" rows="10" class="contact__input"></textarea>
-                        <input type="button" value="Send" class="contact__button button">
+                    <form action="https://formspree.io/f/xrgnrley" method="post" class="contact__form">
+                        <input type="text" name="name" placeholder="Name" class="contact__input">
+                        <input type="mail" name="email" placeholder="Email" class="contact__input">
+                        <textarea name="message" placeholder="Insert text here:" id="text_input" cols="0" rows="10" class="contact__input"></textarea>
+                        <input type="submit" value="Send" class="contact__button button">
                     </form>
                 </div>
+                
             </section>
         </main>
 

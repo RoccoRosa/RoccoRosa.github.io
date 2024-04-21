@@ -63,7 +63,7 @@ document.getElementById("downloadCvBtn").addEventListener("click", function(even
     event.preventDefault();
 
     // URL of the file to download
-    var fileUrl = "assets/img/curriculmVitae.pdf";
+    var fileUrl = "assets/img/EnglishCV.pdf";
 
     // Creating an anchor element
     var downloadAnchor = document.createElement("a");
