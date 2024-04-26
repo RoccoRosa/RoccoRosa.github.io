@@ -1,0 +1,213 @@
+@import url('https://fonts.cdnfonts.com/css/mk-zodnig-square');
+
+*{
+    padding: 0;
+    margin: 0;
+    font-family: 'MK Zodnig Square', sans-serif;
+    scroll-behavior: smooth;
+    text-decoration: none;
+}
+main{
+    background-color: rgb(110, 61, 5)
+}
+ul{
+    text-align: justify;
+}
+strong{
+    color: #000;
+}
+li{
+    color: #fff;
+}
+h1{font-size: 3.5rem;margin-bottom:0.5rem}
+h2{font-size: 2rem;margin-bottom:1rem; margin-top: 0.5rem; text-align: center;}
+h3{font-size: 1.8rem;margin-bottom:1rem}
+h4, p{font-size: 1rem;margin-bottom:1rem; line-height: 1.5; color: #fff; text-align: justify;}
+.grid { margin: 0 auto; padding: 0 15px; max-width: 1250px; display: flex; flex-flow: row; flex-wrap: wrap;}
+.grid--center{justify-content: center;}
+.col{ flex: 1;}
+
+[class*='col-'] { position: relative;padding: 0 15px;}
+.grid .grid [class*='col-'] {padding: 0px;}
+
+.col-20{ width: 20%; }
+.col-25{ width: 25%; }
+.col-30{ width: 30%; }
+.col-33{ width: 33.33%; }
+.col-45{ width: 45%;}
+.col-50{ width: 50%; }
+.col-70{ width: 70%; }
+.col-80{ width: 80%; }
+.col-100{ width: 100%; margin: 10px;}
+
+@media (max-width: 991px) {
+    .tab-20 { width: 20%; }
+    .tab-25 { width: 25%; }
+    .tab-33 { width: 33.33%; }
+    .tab-50 { width: 50%; }
+    .tab-100 { width: 100%; }
+}
+
+@media (max-width: 768px) {
+    [class*='col-'] { width: 100%;}
+    .sma-20 { width: 20%; }
+    .sma-25 { width: 25%; }
+    .sma-33 { width: 33.33%; }
+    .sma-50 { width: 50%; }
+    .sma-100 { width: 100%; }
+}
+/* ! Cover */
+.cover{ 
+  text-align: center; margin:0px; min-height:750px; width:100%; 
+  display:flex; flex-direction:column; justify-content:center; 
+  background-position: center center; background-size:cover;
+  border-bottom: 2px solid black; border-top: 2px solid black;
+}
+.cover * {color:#fff}
+.cover h1{
+    font-size: 6rem;
+    text-shadow: 4px 4px 8px rgba(0, 0, 0, 1);
+}
+.height{
+    min-height: 400px;
+}
+/* Menu */
+:root { --menu-color: #fff; }
+
+.header{ background-color: rgb(110, 61, 5); position: fixed; top:0;  left:0; z-index: 9999; width: 100%; padding: 10px 15px; border-bottom: 2px solid black;}
+.header__content{max-width: 1200px;width: 100%;margin: 0 auto; display: flex;justify-content: space-between;}
+
+.header__logo,
+.header__quick{display: flex; align-items: center;color:rgb(110, 61, 5)}
+
+.header__logo{font-size: 32px;}
+
+
+.header__menu{padding: 0;margin: 0;}
+.header__menu li{display: inline-block;}
+.header__menu li a{color:#fff; opacity: 0.8;display: block;padding: 16px;font-size: 15px;}
+
+@media (max-width: 768px) {
+  .header__menu{   
+    position: absolute; top:60px; left:0; background-color: rgb(110, 61, 5); width: 100%; height: 100vh;
+    height: 0vh; overflow: hidden;transition: all 1s cubic-bezier(.215, .61, .355, 1);
+  }
+
+  .header__menu li{width: 100%;border-bottom: 1px solid #444}
+  .menu-open .header__menu{height: 100vh;padding: 3%;}
+
+  .icon-hamburger{height: 50px;width: 40px;margin-left: 20px;padding-top: 5px;}
+  .icon-hamburger span{height: 2px; width: 30px;background: var(--menu-color);position: relative;display: block;margin-top: 11px;transition: all 0.2s cubic-bezier(.215, .61, .355, 1);}
+
+  .menu-open .icon-hamburger span:nth-child(1){transform: rotate(45deg) translateY(9px);}
+  .menu-open .icon-hamburger span:nth-child(2){transform: rotate(-45deg) translateY(-9px);}
+
+  .header__quick{display: flex; justify-content: flex-end; width: 50%;}
+
+}
+.footer {
+    position: relative;
+    width: 100%;
+    padding: 40px 0;
+    background-image: url('bg-photoaidcom-blur.jpg');
+    background-size: cover;
+    background-position: center bottom;
+}
+.footer .social{
+    text-align: center;
+    padding-bottom: 25px;
+    color: var(--main-color);
+}
+.footer .social a{
+    font-size: 25px;
+    color: var(--main-color);
+    border: 2px solid var(--main-color);
+    width: 42px;
+    height: 42px;
+    line-height: 42px;
+    display: inline-block;
+    text-align: center;
+    border-radius: 50%;
+    margin: 0 10px;
+    transition: 0.3s ease-in-out;
+}
+.footer ul{
+    margin-top: 0;
+    padding: 0;
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 0;
+    text-align: center;
+}
+.footer ul li a{
+    color: #000;
+    border-bottom: 3px solid transparent;
+    transition: 0.3s ease-in-out;
+}
+.footer ul li{
+    display: inline-block;
+    padding: 0 15px;
+}
+.footer .copyright{
+    margin-top: 50px;
+    text-align: center;
+    font-size: 16px;
+    color: #ffffff;
+}
+.button { 
+  font-size: 1rem; text-transform: uppercase; background: #000; color:#fff;
+  text-decoration: none;padding: 10px 20px; display: inline-block;
+  border-radius: 4px; font-weight: 700;
+}
+.button:hover{ background: #060606; }
+
+/* ===== CONTACT =====*/
+/* Stile generale per il container  */
+.contact__container {
+    max-width: 800px; /* Larghezza massima del contenitore */
+    margin: 0 auto; /* Centratura del contenitore */
+    padding: 20px;
+    border-radius: 8px; /* Bordi arrotondati */
+    box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Ombra leggera */
+    background-color: rgb(89, 47, 0);
+}
+
+/* Stile per il form e gli input */
+.contact__form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.contact__input, .contact__button {
+    padding: 10px; /* Spazio interno */
+    border: none; /* Nessun bordo */
+    border-radius: 4px; /* Bordi arrotondati */
+    font-size: 16px; /* Dimensione del testo */
+    background-color: #fff; /* Colore di sfondo per gli input */
+}
+
+.contact__input:focus {
+    background-color: #eef; /* Cambia il colore di sfondo al focus */
+    outline: none; /* Rimuove l'outline di default */
+}
+
+/* Stile per il bottone di invio */
+.contact__button {
+    background-color: #007bff; /* Colore di sfondo */
+    color: white; /* Colore del testo */
+    cursor: pointer; /* Cambia il cursore in una manina */
+    transition: background-color 0.3s; /* Transizione fluida per il background */
+    font-weight: 700; /* Testo in grassetto per il bottone */
+}
+
+.contact__button:hover {
+    background-color: #0056b3; /* Cambia colore al passaggio del mouse */
+}
+
+/* Adattabilità per dispositivi mobili */
+@media (max-width: 600px) {
+    .contact__container {
+        width: 90%; /* Larghezza per dispositivi mobili*/
+    }
+}

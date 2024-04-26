@@ -1,0 +1,23 @@
+*{
+    background-color: yellow;
+}
+header{
+    text-align: center;
+    font: bold;
+    font-size: large;
+    color: solid black;
+}
+
+.SPOILER{
+    text-align: center;
+    font-size: large;
+    font: italic;
+}
+.button{
+    text-align: center;
+    color: aliceblue;
+    font-size: 150px;
+}
+.img{
+    text-align: center;
+}

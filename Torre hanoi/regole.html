@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+
+    <link rel="icon" type="image/png" href="favicon.png"> <!-- Inserimento della favicon vicino al titolo -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">    <!-- Integrazione CSS Bootstrap -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regole della Torre di Hanoi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: bisque;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .rules {
+            margin-top: 30px;
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            background-color: bisque;
+        }
+
+        ol {
+            padding-left: 20px;
+        }
+        html{
+            background-color: bisque;
+        }
+        .tab-content {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">La Torre di Hanoi</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="game-tab" href="hanoi.html" role="tab">Gioco</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="rules-tab" href="regole.html" role="tab">Regole</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="history-tab"  href="storia.html" role="tab">Storia</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <br>
+    <br>
+    <h1>Regole della Torre di Hanoi</h1>
+
+    <div class="rules">
+        <p>Le regole del gioco della Torre di Hanoi sono le seguenti:</p>
+        <ol>
+            <li>Ci sono tre pioli verticali e una serie di dischi di diverse dimensioni che possono essere impilati su questi pioli.</li>
+            <li>Inizialmente, tutti i dischi sono impilati in ordine di dimensione su uno dei pioli, con il disco più grande alla base e il più piccolo in cima.</li>
+            <li>L'obiettivo del gioco è spostare l'intera pila di dischi su un altro piolo, seguendo queste regole:
+                <ol type="a">
+                    <li>Si può spostare un solo disco alla volta.</li>
+                    <li>Si può spostare solo il disco in cima a una pila.</li>
+                    <li>Un disco più grande non può essere posizionato sopra un disco più piccolo.</li>
+                </ol>
+            </li>
+            <li>Si può utilizzare il terzo piolo come piolo di appoggio temporaneo.</li>
+            <li>Il gioco è considerato completato quando tutti i dischi sono stati spostati su un altro piolo rispetto a quello di partenza, mantenendo l'ordine delle dimensioni dei dischi.</li>
+        </ol>
+    </div>
+</body>
+</html>

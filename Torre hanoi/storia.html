@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <link rel="icon" type="image/png" href="favicon.png"> <!-- Inserimento della favicon vicino al titolo -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">    <!-- Integrazione CSS Bootstrap -->
+    <title>Storia della Torre di Hanoi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: bisque;
+        }
+        .storia {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: bisque;
+        }
+        html{
+            background-color: bisque;
+        }
+        .tab-content {
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">La Torre di Hanoi</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="game-tab" href="hanoi.html" role="tab">Gioco</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="rules-tab" href="regole.html" role="tab">Regole</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="history-tab"  href="storia.html" role="tab">Storia</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+<div class="storia">
+    <h1>Storia della Torre di Hanoi</h1>
+    <p>La <strong>Torre di Hanoi</strong> è un antico puzzle matematico. Si dice che la sua origine sia legata ad una leggenda indiana:</p>
+    <p>Secondo la leggenda, in un tempio nella città di Benares (oggi Varanasi), c'è una grande sala con una pila di 64 dischi d'oro. Questi dischi sono posti su uno dei tre pioli del tempio. Gli altri due pioli sono vuoti.</p>
+    <p>La leggenda dice che i monaci del tempio hanno il compito di spostare tutti i dischi da uno dei pioli all'altro, rispettando le seguenti regole:</p>
+    <ol>
+        <li>Si può spostare un solo disco alla volta.</li>
+        <li>Un disco più grande non può mai essere posto sopra un disco più piccolo.</li>
+    </ol>
+    <p>I monaci lavorano giorno e notte per completare il compito. Si dice che, quando avranno completato il trasferimento di tutti i dischi, il mondo sarà avvolto dal fumo bianco e il tempio crollerà, portando la fine del mondo.</p>
+    <p>Anche se la leggenda può sembrare oscura, la Torre di Hanoi è in realtà solo un semplice puzzle matematico che è stato studiato e risolto da matematici moderni. È un esempio classico di ricorsione e può essere risolto con una strategia ben definita.</p>
+    <p>Se vuoi giocare alla Torre di Hanoi, puoi trovarne diverse versioni online o provare a risolverla con carta e penna.</p>
+    <p>Per ulteriori informazioni sulla Torre di Hanoi, visita la <a href="https://it.wikipedia.org/wiki/Torre_di_Hanoi" target="_blank">pagina Wikipedia</a>.</p>
+</div>
+
+</body>
+</html>
