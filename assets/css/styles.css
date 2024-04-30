@@ -509,3 +509,19 @@ img {
 .btn:hover {
   background-color: RoyalBlue;
 }
+
+/* Contact conatiner */
+.contact__container {
+  display: flex;
+  justify-content: space-between; /* Allinea gli elementi ai lati opposti del contenitore */
+  align-items: center; /* Centra gli elementi verticalmente */
+}
+
+.contact__form {
+  flex: 1; /* Permette al form di crescere e occupare lo spazio disponibile */
+}
+
+img {
+  max-width: 100%; /* Assicura che l'immagine non superi la larghezza del suo contenitore */
+  height: auto; /* Mantiene il rapporto d'aspetto dell'immagine */
+}
