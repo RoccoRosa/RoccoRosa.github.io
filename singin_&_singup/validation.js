@@ -81,11 +81,11 @@ allInputs.forEach(input => {
 
 function togglePasswordVisibility() {
   var passwordInput = document.getElementById("password-input");
-  if (passwordInput.type === "password" || repeat-password) {
+  if (passwordInput.type === "password") {
     passwordInput.type = "text";
     document.getElementById("show-password-btn").innerHTML = "Hide";
   } else {
     passwordInput.type = "password";
-    document.getElementById("show-password-btn").innerHTML = "Show";
+    document.getElementById("show-password-btn").innerHTML = "Show Pass";
   }
 }
