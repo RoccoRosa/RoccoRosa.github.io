@@ -82,14 +82,13 @@ allInputs.forEach(input => {
 function togglePasswordVisibility() {
   var passwordInput = document.getElementById("password-input");
   var repeatPasswordInput = document.getElementById("repeat-password-input");
-  
   if (passwordInput.type === "password") {
     passwordInput.type = "text";
     repeatPasswordInput.type = "text";
-    document.getElementById("show-password-btn").innerHTML = "Hide";
+    document.getElementById("show-password-btn").innerHTML = "Hide Password";
   } else {
     passwordInput.type = "password";
     repeatPasswordInput.type = "password";
-    document.getElementById("show-password-btn").innerHTML = "Show";
+    document.getElementById("show-password-btn").innerHTML = "Show Password";
   }
 }
