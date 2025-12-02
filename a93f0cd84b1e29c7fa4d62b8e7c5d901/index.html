@@ -114,6 +114,7 @@
             border-collapse: collapse;
             font-size: 0.85rem;
             margin-top: 0.5rem;
+            min-width: 580px;
         }
 
         th, td {
@@ -142,6 +143,36 @@
 
         .status-bar span {
             font-weight: 600;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 720px) {
+            body {
+                align-items: flex-start;
+            }
+
+            .card {
+                padding: 1rem;
+                margin: 0.5rem;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .btn-row button {
+                flex: 1 1 100%;
+            }
+
+            table {
+                font-size: 0.8rem;
+                min-width: 520px;
+            }
         }
     </style>
 </head>
@@ -207,458 +238,529 @@
         <div class="status-bar" id="status-bar"></div>
 
         <h3 style="margin-top:1.5rem;">Riepilogo giornaliero (per mese)</h3>
-        <table>
-            <thead>
-            <tr>
-                <th>Data</th>
-                <th>Inizio giornata</th>
-                <th>Inizio pausa</th>
-                <th>Fine pausa</th>
-                <th>Fine giornata</th>
-            </tr>
-            </thead>
-            <tbody id="log-table-body">
-            <!-- Righe generate via JS -->
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Inizio giornata</th>
+                    <th>Inizio pausa</th>
+                    <th>Fine pausa</th>
+                    <th>Fine giornata</th>
+                    <th>Azioni</th>
+                </tr>
+                </thead>
+                <tbody id="log-table-body">
+                <!-- Righe generate via JS -->
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<script>
-    // Chiavi di storage
-    const USERS_KEY = "workTracker_users";
-    const CURRENT_USER_KEY = "workTracker_currentUser";
-    const LOG_PREFIX = "workTracker_logs_";
-    const DEFAULT_USERS = {
-        "rocco.rosa.sft.ihz": { passwordHash: "-1161977501" } // Roccorosa2311!
+<script type="module">
+  /********************************************
+   * 1. Firebase (Firestore) – CONFIGURA QUI
+   ********************************************/
+  // Import da CDN (se la versione non esiste più, aggiorna il numero nella URL alla versione attuale di Firebase)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    where,
+    orderBy
+  } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+  // 🔧 METTI QUI I TUOI VALORI
+  const firebaseConfig = {
+    apiKey: "INSERISCI_API_KEY",
+    authDomain: "INSERISCI_AUTH_DOMAIN",
+    projectId: "INSERISCI_PROJECT_ID",
+    // se vuoi, aggiungi anche gli altri campi (storageBucket, ecc.)
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  /********************************************
+   * 2. Chiavi di storage locale
+   ********************************************/
+  const USERS_KEY = "workTracker_users";
+  const CURRENT_USER_KEY = "workTracker_currentUser";
+  const LOG_PREFIX = "workTracker_logs_";
+
+  const DEFAULT_USERS = {
+    "rocco.rosa.sft.ihz": { passwordHash: "-1161977501" } // Roccorosa2311!
+  };
+
+  /********************************************
+   * 3. Riferimenti DOM
+   ********************************************/
+  const loginView = document.getElementById("login-view");
+  const mainView = document.getElementById("main-view");
+  const loginMsg = document.getElementById("login-message");
+
+  const usernameInput = document.getElementById("username");
+  const passwordInput = document.getElementById("password");
+  const togglePasswordBtn = document.getElementById("toggle-password-btn");
+  const loginBtn = document.getElementById("login-btn");
+  const registerBtn = document.getElementById("register-btn");
+
+  const dateTodaySpan = document.getElementById("date-today");
+  const monthFilter = document.getElementById("month-filter");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  const startDayBtn = document.getElementById("start-day-btn");
+  const startBreakBtn = document.getElementById("start-break-btn");
+  const endBreakBtn = document.getElementById("end-break-btn");
+  const endDayBtn = document.getElementById("end-day-btn");
+  const statusBar = document.getElementById("status-bar");
+  const tableBody = document.getElementById("log-table-body");
+
+  let currentUser = null;
+
+  /********************************************
+   * 4. Utility utenti (localStorage)
+   ********************************************/
+  function loadUsers() {
+    try {
+      const raw = localStorage.getItem(USERS_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (err) {
+      console.warn("Errore nel parsing utenti, reset:", err);
+      return {};
+    }
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  }
+
+  function simpleHash(str) {
+    // hash semplice, giusto per non salvare la password in chiaro
+    let hash = 0, i, chr;
+    if (str.length === 0) return hash.toString();
+    for (i = 0; i < str.length; i++) {
+      chr = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |= 0;
+    }
+    return hash.toString();
+  }
+
+  async function seedUsersFromFile() {
+    // Legge credentials.json per ripopolare gli utenti anche dopo wipe del browser
+    try {
+      const res = await fetch("credentials.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("Impossibile leggere credentials.json");
+      const data = await res.json();
+      if (data && data.users) {
+        saveUsers(data.users);
+        ensureDefaultUsers();
+        return;
+      }
+    } catch (err) {
+      console.warn("Seed utenti da file non riuscito:", err);
+    }
+
+    // fallback
+    saveUsers(DEFAULT_USERS);
+  }
+
+  function ensureDefaultUsers() {
+    const users = loadUsers();
+    let changed = false;
+    Object.entries(DEFAULT_USERS).forEach(([user, data]) => {
+      if (!users[user]) {
+        users[user] = data;
+        changed = true;
+      }
+    });
+    if (changed) saveUsers(users);
+  }
+
+  /********************************************
+   * 5. Utility log locali (localStorage)
+   ********************************************/
+  function loadLogsLocal(username) {
+    const raw = localStorage.getItem(LOG_PREFIX + username);
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  function saveLogsLocal(username, logs) {
+    localStorage.setItem(LOG_PREFIX + username, JSON.stringify(logs));
+  }
+
+  /********************************************
+   * 6. Log remoti (Firestore)
+   ********************************************/
+  async function saveLogRemote(username, entry) {
+    try {
+      await addDoc(collection(db, "workLogs"), {
+        username,
+        type: entry.type,
+        timestamp: entry.timestamp
+      });
+    } catch (err) {
+      console.error("Errore salvataggio log su Firestore:", err);
+    }
+  }
+
+  async function loadLogsRemote(username) {
+    try {
+      const q = query(
+        collection(db, "workLogs"),
+        where("username", "==", username),
+        orderBy("timestamp", "asc")
+      );
+      const snap = await getDocs(q);
+      const logs = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data && data.type && data.timestamp) {
+          logs.push({
+            type: data.type,
+            timestamp: data.timestamp
+          });
+        }
+      });
+      return logs;
+    } catch (err) {
+      console.error("Errore caricamento log da Firestore:", err);
+      return [];
+    }
+  }
+
+  async function syncLogsFromServer(username) {
+    if (!username) return;
+
+    const remoteLogs = await loadLogsRemote(username);
+    const localLogs = loadLogsLocal(username);
+
+    // Merge locale+remoto eliminando duplicati (type+timestamp)
+    const all = [...localLogs, ...remoteLogs];
+    const seen = new Set();
+    const unique = [];
+    for (const e of all) {
+      const key = e.type + "|" + e.timestamp;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(e);
+    }
+
+    unique.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+    saveLogsLocal(username, unique);
+
+    renderTable();
+    updateStatusBar();
+  }
+
+  /********************************************
+   * 7. UI base
+   ********************************************/
+  function showLoginView() {
+    loginView.style.display = "block";
+    mainView.style.display = "none";
+    loginMsg.textContent = "";
+    passwordInput.value = "";
+  }
+
+  function showMainView() {
+    loginView.style.display = "none";
+    mainView.style.display = "block";
+    updateStatusBar();
+    renderTable();
+  }
+
+  function updateTodayLabel() {
+    const now = new Date();
+    if (dateTodaySpan) {
+      dateTodaySpan.textContent = now.toLocaleDateString("it-IT", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    }
+    if (monthFilter && !monthFilter.value) {
+      const ym = now.toISOString().slice(0, 7);
+      monthFilter.value = ym;
+    }
+  }
+
+  /********************************************
+   * 8. Gestione login / registrazione
+   ********************************************/
+  async function handleLogin(isRegister) {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!username || !password) {
+      loginMsg.textContent = "Inserisci sia nome utente che password.";
+      loginMsg.style.color = "#b91c1c";
+      return;
+    }
+
+    const users = loadUsers();
+    const hash = simpleHash(password);
+
+    if (isRegister) {
+      if (users[username]) {
+        loginMsg.textContent = "Utente già esistente. Prova ad accedere.";
+        loginMsg.style.color = "#b91c1c";
+        return;
+      }
+      users[username] = { passwordHash: hash };
+      saveUsers(users);
+      loginMsg.style.color = "#047857";
+      loginMsg.textContent = "Account creato. Ora sei loggato.";
+    } else {
+      if (!users[username]) {
+        loginMsg.textContent = "Utente non trovato. Registrati prima.";
+        loginMsg.style.color = "#b91c1c";
+        return;
+      }
+      if (users[username].passwordHash !== hash) {
+        loginMsg.textContent = "Password errata.";
+        loginMsg.style.color = "#b91c1c";
+        return;
+      }
+      loginMsg.textContent = "";
+    }
+
+    currentUser = username;
+    localStorage.setItem(CURRENT_USER_KEY, currentUser);
+    showMainView();
+
+    // 🔁 Sincronizza i log da Firestore -> localStorage
+    syncLogsFromServer(currentUser);
+  }
+
+  /********************************************
+   * 9. Logica eventi (startDay / break / endDay)
+   ********************************************/
+  function labelForType(type) {
+    switch (type) {
+      case "startDay": return "Inizio giornata";
+      case "startBreak": return "Inizio pausa";
+      case "endBreak": return "Fine pausa";
+      case "endDay": return "Fine giornata";
+      default: return type;
+    }
+  }
+
+  function recordEvent(type) {
+    if (!currentUser) return;
+
+    const now = new Date();
+    const logs = loadLogsLocal(currentUser);
+    const todayKey = now.toISOString().slice(0, 10); // yyyy-MM-dd
+
+    const already = logs.some(
+      e => e.type === type && e.timestamp.slice(0, 10) === todayKey
+    );
+    if (already) {
+      alert(`Evento "${labelForType(type)}" già registrato per oggi.`);
+      return;
+    }
+
+    const entry = {
+      type,
+      timestamp: now.toISOString()
     };
 
-    // Riferimenti DOM
-    const loginView = document.getElementById("login-view");
-    const mainView = document.getElementById("main-view");
-    const loginMsg = document.getElementById("login-message");
+    // Salva in locale
+    logs.push(entry);
+    saveLogsLocal(currentUser, logs);
 
-    const usernameInput = document.getElementById("username");
-    const passwordInput = document.getElementById("password");
-    const loginBtn = document.getElementById("login-btn");
-    const registerBtn = document.getElementById("register-btn");
-    const togglePasswordBtn = document.getElementById("toggle-password-btn");
+    // Salva remoto (non blocca l'interfaccia)
+    saveLogRemote(currentUser, entry);
 
-    const userLabel = document.getElementById("user-label");
-    const todayLabel = document.getElementById("today-label");
-    const monthFilter = document.getElementById("month-filter");
-    const logoutBtn = document.getElementById("logout-btn");
-    const exportBtn = document.getElementById("export-btn");
-    const syncCredBtn = document.getElementById("sync-cred-btn");
-    const importBtn = document.getElementById("import-btn");
-    const importFileInput = document.getElementById("import-file");
+    renderTable();
+    updateStatusBar();
+  }
 
-    const startDayBtn = document.getElementById("start-day-btn");
-    const startBreakBtn = document.getElementById("start-break-btn");
-    const endBreakBtn = document.getElementById("end-break-btn");
-    const endDayBtn = document.getElementById("end-day-btn");
-    const statusBar = document.getElementById("status-bar");
-    const tableBody = document.getElementById("log-table-body");
-
-    let currentUser = null;
-
-    // Utilità storage utenti
-    function loadUsers() {
-        const raw = localStorage.getItem(USERS_KEY);
-        return raw ? JSON.parse(raw) : {};
-    }
-
-    function saveUsers(users) {
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    }
-
-    function simpleHash(str) {
-        // hash semplice, giusto per non salvare la password in chiaro
-        let hash = 0, i, chr;
-        if (str.length === 0) return hash.toString();
-        for (i = 0; i < str.length; i++) {
-            chr   = str.charCodeAt(i);
-            hash  = ((hash << 5) - hash) + chr;
-            hash |= 0;
-        }
-        return hash.toString();
-    }
-
-    // Utilità storage log
-    function loadLogs(username) {
-        const raw = localStorage.getItem(LOG_PREFIX + username);
-        return raw ? JSON.parse(raw) : [];
-    }
-
-    function saveLogs(username, logs) {
-        localStorage.setItem(LOG_PREFIX + username, JSON.stringify(logs));
-    }
-
-    function downloadJsonFile(filename, data) {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }
-
-    function loadAllLogs() {
-        const logs = {};
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith(LOG_PREFIX)) {
-                const user = key.slice(LOG_PREFIX.length);
-                try {
-                    logs[user] = JSON.parse(localStorage.getItem(key)) || [];
-                } catch (e) {
-                    logs[user] = [];
-                }
-            }
-        }
-        return logs;
-    }
-
-    function saveAllLogs(logs) {
-        Object.keys(localStorage).forEach(k => {
-            if (k.startsWith(LOG_PREFIX)) localStorage.removeItem(k);
-        });
-        Object.entries(logs).forEach(([user, entries]) => {
-            localStorage.setItem(LOG_PREFIX + user, JSON.stringify(entries || []));
-        });
-    }
-
-    // Seed utenti dal file JSON locale (solo in lettura)
-    async function seedUsersFromFile() {
-        try {
-            const existing = loadUsers();
-            if (Object.keys(existing).length > 0) {
-                ensureDefaultUsers();
-                return; // non sovrascrivere
-            }
-
-            const res = await fetch("credentials.json", { cache: "no-store" });
-            if (!res.ok) throw new Error("Impossibile caricare credentials.json");
-            const data = await res.json();
-            if (data && typeof data === "object" && data.users && typeof data.users === "object") {
-                saveUsers(data.users);
-                ensureDefaultUsers();
-                return;
-            }
-        } catch (err) {
-            console.warn(err.message || err);
-        }
-        // fallback a utenti di default se il file non è disponibile
-        saveUsers(DEFAULT_USERS);
-    }
-
-    // Login / Registrazione
-    function handleLogin(isRegister) {
-        const username = usernameInput.value.trim();
-        const password = passwordInput.value;
-
-        if (!username || !password) {
-            loginMsg.textContent = "Inserisci sia nome utente che password.";
-            return;
-        }
-
-        const users = loadUsers();
-        const hash = simpleHash(password);
-
-        if (isRegister) {
-            if (users[username]) {
-                loginMsg.textContent = "Utente già esistente. Prova ad accedere.";
-                return;
-            }
-            users[username] = { passwordHash: hash };
-            saveUsers(users);
-            downloadCredentialsFile(); // scarica il file aggiornato da salvare nella cartella
-            loginMsg.style.color = "#047857";
-            loginMsg.textContent = "Account creato. Ora sei loggato.";
-            setTimeout(() => {
-                loginMsg.textContent = "";
-                loginMsg.style.color = "#b91c1c";
-            }, 2500);
-        } else {
-            if (!users[username]) {
-                loginMsg.textContent = "Utente non trovato. Registrati prima.";
-                return;
-            }
-            if (users[username].passwordHash !== hash) {
-                loginMsg.textContent = "Password errata.";
-                return;
-            }
-        }
-
-        currentUser = username;
-        localStorage.setItem(CURRENT_USER_KEY, currentUser);
-        passwordInput.value = "";
-        showMainView();
-    }
-
-    function showMainView() {
-        loginView.classList.add("hidden");
-        mainView.classList.remove("hidden");
-        userLabel.textContent = currentUser;
-
-        const today = new Date();
-        todayLabel.textContent = today.toLocaleDateString("it-IT", {
-            weekday: "long",
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        });
-
-        // Set mese corrente nel filtro
-        const monthVal = today.toISOString().slice(0, 7); // yyyy-MM
-        monthFilter.value = monthVal;
-
-        renderTable();
-        updateStatusBar();
-    }
-
-    function showLoginView() {
-        loginView.classList.remove("hidden");
-        mainView.classList.add("hidden");
-        loginMsg.textContent = "";
-    }
-
-    function logout() {
-        currentUser = null;
-        localStorage.removeItem(CURRENT_USER_KEY);
-        showLoginView();
-    }
-
-    // Gestione eventi giornata
-    function recordEvent(type) {
-        if (!currentUser) return;
-
-        const now = new Date();
-        const logs = loadLogs(currentUser);
-
-        const todayKey = now.toISOString().slice(0, 10); // yyyy-MM-dd
-        const already = logs.some(e => e.type === type && e.timestamp.slice(0,10) === todayKey);
-
-        if (already) {
-            alert("Evento \"" + labelForType(type) + "\" già registrato per oggi.");
-            return;
-        }
-
-        logs.push({
-            type,
-            timestamp: now.toISOString()
-        });
-
-        saveLogs(currentUser, logs);
-        renderTable();
-        updateStatusBar();
-    }
-
-    function labelForType(type) {
-        switch (type) {
-            case "startDay": return "Inizio giornata";
-            case "startBreak": return "Inizio pausa";
-            case "endBreak": return "Fine pausa";
-            case "endDay": return "Fine giornata";
-            default: return type;
-        }
-    }
-
-    function ensureDefaultUsers() {
-        const users = loadUsers();
-        let changed = false;
-        Object.entries(DEFAULT_USERS).forEach(([user, data]) => {
-            if (!users[user]) {
-                users[user] = data;
-                changed = true;
-            }
-        });
-        if (changed) saveUsers(users);
-    }
-
-    function updateStatusBar() {
-        if (!currentUser) return;
-
-        const logs = loadLogs(currentUser);
-        const todayKey = new Date().toISOString().slice(0,10);
-        const todayEvents = logs.filter(e => e.timestamp.slice(0,10) === todayKey);
-
-        if (todayEvents.length === 0) {
-            statusBar.textContent = "Nessun evento registrato per oggi.";
-            return;
-        }
-
-        const parts = [];
-        ["startDay","startBreak","endBreak","endDay"].forEach(type => {
-            const ev = todayEvents.find(e => e.type === type);
-            if (ev) {
-                const time = new Date(ev.timestamp).toLocaleTimeString("it-IT", {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                });
-                parts.push(labelForType(type) + ": " + time);
-            }
-        });
-
-        statusBar.innerHTML = "Oggi &rarr; " + parts.join(" | ");
-    }
-
-    // Render tabella per mese selezionato
-    function renderTable() {
-        if (!currentUser) return;
-        const logs = loadLogs(currentUser).sort((a,b) => a.timestamp.localeCompare(b.timestamp));
-
-        const monthVal = monthFilter.value; // yyyy-MM
-        tableBody.innerHTML = "";
-
-        if (!monthVal) return;
-
-        const perDay = {};
-
-        logs.forEach(entry => {
-            const dateStr = entry.timestamp.slice(0,10); // yyyy-MM-dd
-            if (!dateStr.startsWith(monthVal)) return;
-
-            if (!perDay[dateStr]) {
-                perDay[dateStr] = {
-                    startDay: null,
-                    startBreak: null,
-                    endBreak: null,
-                    endDay: null
-                };
-            }
-
-            if (!perDay[dateStr][entry.type]) {
-                perDay[dateStr][entry.type] = entry.timestamp;
-            }
-        });
-
-        const days = Object.keys(perDay).sort().reverse(); // ultimi giorni in alto
-
-        if (days.length === 0) {
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-            td.colSpan = 5;
-            td.textContent = "Nessun dato per il mese selezionato.";
-            tr.appendChild(td);
-            tableBody.appendChild(tr);
-            return;
-        }
-
-        days.forEach(d => {
-            const data = perDay[d];
-            const tr = document.createElement("tr");
-
-            const dateCell = document.createElement("td");
-            const dt = new Date(d + "T00:00:00");
-            dateCell.textContent = dt.toLocaleDateString("it-IT");
-            tr.appendChild(dateCell);
-
-            ["startDay","startBreak","endBreak","endDay"].forEach(type => {
-                const td = document.createElement("td");
-                if (data[type]) {
-                    const t = new Date(data[type]).toLocaleTimeString("it-IT", {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    });
-                    td.textContent = t;
-                } else {
-                    td.textContent = "-";
-                }
-                tr.appendChild(td);
-            });
-
-            tableBody.appendChild(tr);
-        });
-    }
-
-    // Import / Export
-    function exportData() {
-        const payload = {
-            users: loadUsers(),
-            logs: loadAllLogs(),
-            currentUser
+  /********************************************
+   * 10. Riepilogo e tabella
+   ********************************************/
+  function groupLogsByDate(logs) {
+    const byDate = {};
+    logs.forEach(e => {
+      const d = e.timestamp.slice(0, 10);
+      if (!byDate[d]) {
+        byDate[d] = {
+          startDay: null,
+          startBreak: null,
+          endBreak: null,
+          endDay: null
         };
-        downloadJsonFile("worktracker-data-" + new Date().toISOString().slice(0,10) + ".json", payload);
+      }
+      if (!byDate[d][e.type]) {
+        byDate[d][e.type] = e.timestamp;
+      }
+    });
+    return byDate;
+  }
+
+  function updateStatusBar() {
+    if (!currentUser) {
+      statusBar.textContent = "";
+      return;
     }
 
-    function downloadCredentialsFile() {
-        const payload = {
-            users: loadUsers(),
-            note: "Sostituisci questo file nella cartella del sito per condividere le credenziali sugli altri dispositivi. In scrittura il browser non puo aggiornare il file automaticamente."
-        };
-        downloadJsonFile("credentials.json", payload);
+    const logs = loadLogsLocal(currentUser);
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const todayEvents = logs.filter(e => e.timestamp.slice(0, 10) === todayKey);
+
+    if (todayEvents.length === 0) {
+      statusBar.textContent = "Nessun evento registrato per oggi.";
+      return;
     }
 
-    function handleImportFile(event) {
-        const file = event.target.files && event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = () => {
-            try {
-                const parsed = JSON.parse(reader.result);
-                if (typeof parsed !== "object" || parsed === null) throw new Error("File non valido");
-                const users = parsed.users && typeof parsed.users === "object" ? parsed.users : {};
-                const logs = parsed.logs && typeof parsed.logs === "object" ? parsed.logs : {};
-                saveUsers(users);
-                saveAllLogs(logs);
-
-                if (parsed.currentUser && users[parsed.currentUser]) {
-                    currentUser = parsed.currentUser;
-                    localStorage.setItem(CURRENT_USER_KEY, currentUser);
-                    showMainView();
-                } else {
-                    currentUser = null;
-                    localStorage.removeItem(CURRENT_USER_KEY);
-                    showLoginView();
-                }
-                alert("Dati importati con successo.");
-            } catch (err) {
-                alert("Import fallito: " + err.message);
-            } finally {
-                importFileInput.value = "";
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    // Event listeners
-    loginBtn.addEventListener("click", () => handleLogin(false));
-    registerBtn.addEventListener("click", () => handleLogin(true));
-    logoutBtn.addEventListener("click", logout);
-    togglePasswordBtn.addEventListener("click", () => {
-        const isHidden = passwordInput.type === "password";
-        passwordInput.type = isHidden ? "text" : "password";
-        togglePasswordBtn.textContent = isHidden ? "Nascondi" : "Mostra";
+    const byType = {};
+    todayEvents.forEach(e => {
+      if (!byType[e.type]) byType[e.type] = e.timestamp;
     });
 
-    startDayBtn.addEventListener("click", () => recordEvent("startDay"));
-    startBreakBtn.addEventListener("click", () => recordEvent("startBreak"));
-    endBreakBtn.addEventListener("click", () => recordEvent("endBreak"));
-    endDayBtn.addEventListener("click", () => recordEvent("endDay"));
+    const parts = [];
+    if (byType.startDay) {
+      parts.push(`Inizio giornata: ${new Date(byType.startDay).toLocaleTimeString("it-IT")}`);
+    }
+    if (byType.startBreak) {
+      parts.push(`Inizio pausa: ${new Date(byType.startBreak).toLocaleTimeString("it-IT")}`);
+    }
+    if (byType.endBreak) {
+      parts.push(`Fine pausa: ${new Date(byType.endBreak).toLocaleTimeString("it-IT")}`);
+    }
+    if (byType.endDay) {
+      parts.push(`Fine giornata: ${new Date(byType.endDay).toLocaleTimeString("it-IT")}`);
+    }
 
+    statusBar.textContent = parts.join(" · ");
+  }
+
+  function renderTable() {
+    if (!currentUser || !tableBody) return;
+
+    const logs = loadLogsLocal(currentUser);
+    const grouped = groupLogsByDate(logs);
+
+    // Filtro per mese
+    const selectedMonth = monthFilter && monthFilter.value
+      ? monthFilter.value
+      : null; // "yyyy-MM"
+
+    const dates = Object.keys(grouped).sort().reverse(); // data più recente in alto
+    tableBody.innerHTML = "";
+
+    dates.forEach(d => {
+      if (selectedMonth && !d.startsWith(selectedMonth)) {
+        return;
+      }
+
+      const rowData = grouped[d];
+      const tr = document.createElement("tr");
+
+      const prettydDate = new Date(d + "T00:00:00").toLocaleDateString("it-IT");
+      const dateTd = document.createElement("td");
+      dateTd.textContent = prettydDate;
+      tr.appendChild(dateTd);
+
+      ["startDay", "startBreak", "endBreak", "endDay"].forEach(type => {
+        const td = document.createElement("td");
+        if (rowData[type]) {
+          td.textContent = new Date(rowData[type]).toLocaleTimeString("it-IT", {
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+        } else {
+          td.textContent = "-";
+          td.style.color = "#9ca3af";
+        }
+        tr.appendChild(td);
+      });
+
+      // Colonna azioni: elimina giorno
+      const actionTd = document.createElement("td");
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Elimina giorno";
+      delBtn.className = "secondary";
+      delBtn.style.background = "#ef4444";
+      delBtn.style.color = "#fff";
+      delBtn.addEventListener("click", () => deleteDay(d));
+      actionTd.appendChild(delBtn);
+      tr.appendChild(actionTd);
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function deleteDay(dateStr) {
+    if (!currentUser) return;
+    const pretty = new Date(dateStr + "T00:00:00").toLocaleDateString("it-IT");
+    const ok = confirm(`Eliminare tutti gli eventi del ${pretty}?`);
+    if (!ok) return;
+
+    const logs = loadLogsLocal(currentUser);
+    const filtered = logs.filter(e => e.timestamp.slice(0, 10) !== dateStr);
+    saveLogsLocal(currentUser, filtered);
+    renderTable();
+    updateStatusBar();
+    // Volendo potresti aggiungere anche una cancellazione remota su Firestore
+  }
+
+  /********************************************
+   * 11. Event listeners
+   ********************************************/
+  togglePasswordBtn.addEventListener("click", () => {
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      togglePasswordBtn.textContent = "Nascondi";
+    } else {
+      passwordInput.type = "password";
+      togglePasswordBtn.textContent = "Mostra";
+    }
+  });
+
+  loginBtn.addEventListener("click", () => handleLogin(false));
+  registerBtn.addEventListener("click", () => handleLogin(true));
+
+  startDayBtn.addEventListener("click", () => recordEvent("startDay"));
+  startBreakBtn.addEventListener("click", () => recordEvent("startBreak"));
+  endBreakBtn.addEventListener("click", () => recordEvent("endBreak"));
+  endDayBtn.addEventListener("click", () => recordEvent("endDay"));
+
+  if (monthFilter) {
     monthFilter.addEventListener("change", renderTable);
-    exportBtn.addEventListener("click", exportData);
-    syncCredBtn.addEventListener("click", downloadCredentialsFile);
-    importBtn.addEventListener("click", () => importFileInput.click());
-    importFileInput.addEventListener("change", handleImportFile);
+  }
 
-    // Auto-login se c'è utente salvato
-    window.addEventListener("DOMContentLoaded", async () => {
-        await seedUsersFromFile();
-        ensureDefaultUsers();
-        const savedUser = localStorage.getItem(CURRENT_USER_KEY);
-        if (savedUser) {
-            currentUser = savedUser;
-            showMainView();
-        } else {
-            showLoginView();
-        }
-    });
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem(CURRENT_USER_KEY);
+    currentUser = null;
+    showLoginView();
+  });
+
+  /********************************************
+   * 12. Bootstrap pagina
+   ********************************************/
+  window.addEventListener("DOMContentLoaded", async () => {
+    updateTodayLabel();
+    await seedUsersFromFile();
+    ensureDefaultUsers();
+
+    const savedUser = localStorage.getItem(CURRENT_USER_KEY);
+    if (savedUser) {
+      currentUser = savedUser;
+      showMainView();
+      syncLogsFromServer(currentUser); // sincronizza da Firestore
+    } else {
+      showLoginView();
+    }
+  });
 </script>
+
 </body>
 </html>
