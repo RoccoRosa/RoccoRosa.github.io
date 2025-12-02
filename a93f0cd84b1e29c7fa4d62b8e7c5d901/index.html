@@ -335,13 +335,17 @@
     async function seedUsersFromFile() {
         try {
             const existing = loadUsers();
-            if (Object.keys(existing).length > 0) return; // non sovrascrivere
+            if (Object.keys(existing).length > 0) {
+                ensureDefaultUsers();
+                return; // non sovrascrivere
+            }
 
             const res = await fetch("credentials.json", { cache: "no-store" });
             if (!res.ok) throw new Error("Impossibile caricare credentials.json");
             const data = await res.json();
             if (data && typeof data === "object" && data.users && typeof data.users === "object") {
                 saveUsers(data.users);
+                ensureDefaultUsers();
                 return;
             }
         } catch (err) {
@@ -461,6 +465,18 @@
             case "endDay": return "Fine giornata";
             default: return type;
         }
+    }
+
+    function ensureDefaultUsers() {
+        const users = loadUsers();
+        let changed = false;
+        Object.entries(DEFAULT_USERS).forEach(([user, data]) => {
+            if (!users[user]) {
+                users[user] = data;
+                changed = true;
+            }
+        });
+        if (changed) saveUsers(users);
     }
 
     function updateStatusBar() {
@@ -634,6 +650,7 @@
     // Auto-login se c'è utente salvato
     window.addEventListener("DOMContentLoaded", async () => {
         await seedUsersFromFile();
+        ensureDefaultUsers();
         const savedUser = localStorage.getItem(CURRENT_USER_KEY);
         if (savedUser) {
             currentUser = savedUser;
